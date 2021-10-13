@@ -1,0 +1,41 @@
+@font-face {
+  font-family: "Katex";
+  src: url(./fonts/katex-regular.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Katex";
+  src: url(./fonts/katex-bold.ttf) format("truetype");
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: "Katex";
+  src: url(./fonts/katex-italic.ttf) format("truetype");
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Katex";
+  src: url(./fonts/katex-bolditalic.ttf) format("truetype");
+  font-weight: bold;
+  font-style: italic;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+body {
+  color: #141414;
+  background-color: #fefefc;
+  font-family: "Katex";
+}
+
+a {
+  text-decoration: none;
+  color: black;
+  transition: 0.3s linear;
+}
+
+a:hover {
+  opacity: 0.4;
+}
