@@ -9,6 +9,7 @@ import { graph, dimensions, squareTemplate } from "./utils/linalg";
 import MatrixInput from "./components/MatrixInput";
 import MatrixTransform from "./components/MatrixTransform";
 import Reset from "./components/Reset";
+import Info from "./components/Info";
 
 export type VectorsAction =
   | { type: "apply-matrix"; matrix: THREE.Matrix3 }
@@ -131,59 +132,60 @@ function App() {
   const svd = new SingularValueDecomposition([row1, row2, row3]);
 
   return (
-    <div>
-      <div ref={ref} />
-      <div style={{ marginBottom: 6, marginTop: -265 }}>
-        <Reset vectorsDispatch={vectorsDispatch} />
-      </div>
-      <div
-        style={{ display: "flex", justifyContent: "center" }}
-      >
-        <MatrixInput
-          rows={[
-            [row1, setRow1],
-            [row2, setRow2],
-            [row3, setRow3],
-          ]}
-        />
-        <div
-          style={{
-            marginLeft: 3,
-            marginRight: 3,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Latex>$$=$$</Latex>
+    <>
+      <div>
+        <div ref={ref} />
+        <div style={{ marginBottom: 6, marginTop: -265 }}>
+          <Reset vectorsDispatch={vectorsDispatch} />
         </div>
-        <MatrixTransform
-          matrix={new THREE.Matrix3().fromArray([
-            ...svd.leftSingularVectors.getRow(0),
-            ...svd.leftSingularVectors.getRow(1),
-            ...svd.leftSingularVectors.getRow(2),
-          ])}
-          vectorsDispatch={vectorsDispatch}
-        />
-        <MatrixTransform
-          matrix={new THREE.Matrix3().fromArray([
-            ...svd.diagonalMatrix.getRow(0),
-            ...svd.diagonalMatrix.getRow(1),
-            ...svd.diagonalMatrix.getRow(2),
-          ])}
-          vectorsDispatch={vectorsDispatch}
-        />
-        <MatrixTransform
-          matrix={new THREE.Matrix3().fromArray([
-            ...svd.rightSingularVectors.getRow(0),
-            ...svd.rightSingularVectors.getRow(1),
-            ...svd.rightSingularVectors.getRow(2),
-          ])}
-          vectorsDispatch={vectorsDispatch}
-          transpose
-        />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <MatrixInput
+            rows={[
+              [row1, setRow1],
+              [row2, setRow2],
+              [row3, setRow3],
+            ]}
+          />
+          <div
+            style={{
+              marginLeft: 3,
+              marginRight: 3,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Latex>$$=$$</Latex>
+          </div>
+          <MatrixTransform
+            matrix={new THREE.Matrix3().fromArray([
+              ...svd.leftSingularVectors.getRow(0),
+              ...svd.leftSingularVectors.getRow(1),
+              ...svd.leftSingularVectors.getRow(2),
+            ])}
+            vectorsDispatch={vectorsDispatch}
+          />
+          <MatrixTransform
+            matrix={new THREE.Matrix3().fromArray([
+              ...svd.diagonalMatrix.getRow(0),
+              ...svd.diagonalMatrix.getRow(1),
+              ...svd.diagonalMatrix.getRow(2),
+            ])}
+            vectorsDispatch={vectorsDispatch}
+          />
+          <MatrixTransform
+            matrix={new THREE.Matrix3().fromArray([
+              ...svd.rightSingularVectors.getRow(0),
+              ...svd.rightSingularVectors.getRow(1),
+              ...svd.rightSingularVectors.getRow(2),
+            ])}
+            vectorsDispatch={vectorsDispatch}
+            transpose
+          />
+        </div>
       </div>
-    </div>
+      <Info />
+    </>
   );
 }
 
