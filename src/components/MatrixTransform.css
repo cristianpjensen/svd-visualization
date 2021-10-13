@@ -1,0 +1,10 @@
+.matrix {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.matrix:hover {
+  opacity: 0.6;
+  cursor: pointer;
+}
