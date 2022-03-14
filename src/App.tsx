@@ -1,6 +1,7 @@
+import "katex/dist/katex.min.css";
 import { useEffect, useRef, useState, useReducer } from "react";
 import { SingularValueDecomposition } from "ml-matrix";
-import Latex from "react-latex";
+import Latex from "react-latex-next";
 import * as THREE from "three";
 import _ from "lodash";
 
@@ -21,7 +22,7 @@ type VectorsState = {
   objects: Array<THREE.Mesh>;
 };
 
-function App() {
+const App = () => {
   const ref = useRef<HTMLDivElement>(null);
   const dims = dimensions();
 
@@ -187,6 +188,6 @@ function App() {
       <Info />
     </>
   );
-}
+};
 
 export default App;

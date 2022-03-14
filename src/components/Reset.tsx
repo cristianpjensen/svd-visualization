@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { VectorsAction } from "../App";
 
 interface PolarCoords {
@@ -12,7 +13,7 @@ interface ResetProps {
 export default function Reset(props: ResetProps) {
   const { defaultVectors, vectorsDispatch } = props;
 
-  function reset() {
+  const reset = useCallback(() => {
     if (defaultVectors) {
       defaultVectors.forEach(([defaultVector, setVector]) => {
         setVector(defaultVector);
@@ -22,7 +23,7 @@ export default function Reset(props: ResetProps) {
     if (vectorsDispatch) {
       vectorsDispatch({ type: "reset" });
     }
-  }
+  }, [defaultVectors]);
 
   return (
     <svg

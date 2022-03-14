@@ -16,6 +16,7 @@ export default function MatrixInput(props: MatrixInputProps) {
         display: "grid",
         gridTemplateColumns: "7px 18px 12px 18px 12px 18px 7px",
         gridGap: 4,
+        zIndex: 1,
       }}
     >
       <MatrixOpen />

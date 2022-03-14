@@ -1,4 +1,4 @@
-import Latex from "react-latex";
+import Latex from "react-latex-next";
 import * as THREE from "three";
 
 import { VectorsAction } from "../App";
@@ -30,6 +30,7 @@ export default function MatrixTransform(props: MatrixTransformProps) {
   return (
     <div
       className="matrix"
+      style={{ marginTop: transpose ? -14 : -10 }}
       onClick={() =>
         vectorsDispatch({
           type: "apply-matrix",
@@ -38,7 +39,7 @@ export default function MatrixTransform(props: MatrixTransformProps) {
       }
     >
       <Latex>{`$$ \\begin{bmatrix} ${matrixString} \\end{bmatrix} ${
-        transpose ? "^T" : ""
+        transpose ? "^\\top" : ""
       } $$`}</Latex>
     </div>
   );

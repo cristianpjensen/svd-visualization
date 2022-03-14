@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 export default function Info() {
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleClick = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
 
   return (
     <div style={{ position: "absolute", top: 12, right: 12 }}>
@@ -11,7 +15,7 @@ export default function Info() {
         viewBox="0 0 15 15"
         className="matrix"
         fill="white"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleClick}
         style={{ position: "absolute", top: 0, right: 0 }}
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -35,20 +39,11 @@ export default function Info() {
           <b>Info</b>
         </div>
         You can change the matrix input by clicking on the matrix values and
-        changing them like any other input.
-        <br />
-        <br />
-        When you have put in your desired matrix, you can click on the matrices
-        to apply them to the vectors (visualised as dots).
-        <br />
-        <br />
-        You should click the matrices in the order of which they would be
-        applied, which is, of course, from right to left.
-        <br />
-        <br />
+        changing them like any other input. When you have put in your desired
+        matrix, you can click on the matrices to apply them to the vectors
+        (visualised as dots). You should click the matrices in the order of
+        which they would be applied, which is, of course, from right to left.
         Click on the arrow to reset the vectors to their original positions.
-        <br />
-        <br />
         Click{" "}
         <a href="https://en.wikipedia.org/wiki/Singular_value_decomposition">
           here
