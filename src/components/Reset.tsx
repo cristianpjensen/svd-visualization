@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { VectorsAction } from "../App";
+// import { VectorsAction } from "../App";
 
 interface PolarCoords {
   r: number;
@@ -7,21 +7,17 @@ interface PolarCoords {
 }
 interface ResetProps {
   defaultVectors?: Array<[PolarCoords, (arg1: PolarCoords) => void]>;
-  vectorsDispatch?: (arg0: VectorsAction) => void;
+  // vectorsDispatch?: (arg0: VectorsAction) => void;
 }
 
 export default function Reset(props: ResetProps) {
-  const { defaultVectors, vectorsDispatch } = props;
+  const { defaultVectors } = props;
 
   const reset = useCallback(() => {
     if (defaultVectors) {
       defaultVectors.forEach(([defaultVector, setVector]) => {
         setVector(defaultVector);
       });
-    }
-
-    if (vectorsDispatch) {
-      vectorsDispatch({ type: "reset" });
     }
   }, [defaultVectors]);
 
