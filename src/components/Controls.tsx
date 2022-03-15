@@ -2,8 +2,8 @@ import { SingularValueDecomposition } from "ml-matrix";
 import Latex from "react-latex-next";
 import { Matrix3 } from "three";
 import { useStore } from "../store";
-import { MatrixInput } from "./MatrixInput";
-import { MatrixTransform } from "./MatrixTransform";
+import { MatrixInput } from "./controls/MatrixInput";
+import { MatrixTransform } from "./controls/MatrixTransform";
 
 export const Controls = () => {
   const matrix = useStore((state) => state.matrix);

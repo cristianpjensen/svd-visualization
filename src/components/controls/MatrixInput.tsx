@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import _ from "lodash";
-import { useStore } from "../store";
+import { useStore } from "../../store";
 
 export const MatrixInput = () => {
   return (
@@ -35,7 +35,7 @@ const InputCell = ({ index }: InputCellProps) => {
     setValue(e.target.value);
 
     setMatrixIndex(index, parseFloat(e.target.value));
-  }, []);
+  }, [index, setMatrixIndex]);
 
   return (
     <input

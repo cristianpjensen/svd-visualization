@@ -1,9 +1,7 @@
-import { useRef } from "react";
-import { Mesh, Vector3 } from "three";
-import * as TWEEN from "@tweenjs/tween.js";
-import { Canvas, MeshProps, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stats } from "@react-three/drei";
-import { useStore } from "../store";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { Vectors } from "./threeworld/Vectors";
+import { RenderCycler } from "./threeworld/RenderCycler";
 
 export const ThreeWorld = () => {
   return (
@@ -22,61 +20,8 @@ export const ThreeWorld = () => {
       <ambientLight />
       <gridHelper args={[100, 100, "white", "gray"]} />
       <Vectors />
+      <RenderCycler />
       <OrbitControls />
     </Canvas>
   );
-};
-
-const Vectors = () => {
-  // Initial vectors
-  const vectors = useStore((state) => state.vectors);
-
-  return (
-    <>
-      {vectors.map((vector, i) => (
-        <Circle key={i} vector={vector} />
-      ))}
-    </>
-  );
-};
-
-interface CircleProps extends MeshProps {
-  vector: Vector3;
-}
-
-const Circle = ({ vector, ...props }: CircleProps) => {
-  const mesh = useRef<Mesh>();
-
-  useFrame(() => {
-    if (mesh.current) {
-      mesh.current.position.lerp(vector, 0.05);
-    }
-  });
-
-  return (
-    <mesh {...props} ref={mesh}>
-      <sphereGeometry args={[0.2, 32, 32]} />
-      <meshStandardMaterial color="orange" />
-    </mesh>
-  );
-};
-
-/**
- * Moves `objVector` to the position of `vector` by scaling. It basically just
- * goes from the (x, y, z)-position of the object to the (x, y, z)-position of
- * the vector.
- * @param vector vector to go to.
- * @param mesh vector to move.
- */
-const vectorScale = (vector: Vector3, mesh: Mesh) => {
-  var pos = mesh.position.clone();
-
-  new TWEEN.Tween(pos)
-    .to({ x: vector.x, y: vector.y, z: vector.z }, 1000)
-    .easing(TWEEN.Easing.Cubic.Out)
-    .onUpdate(() => {
-      mesh.position.set(pos.x, pos.y, pos.z);
-      console.log(1);
-    })
-    .start();
 };

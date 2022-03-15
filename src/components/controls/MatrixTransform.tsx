@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Latex from "react-latex-next";
 import { Matrix3 } from "three";
-import { useStore } from "../store";
+import { useStore } from "../../store";
 
 import "./MatrixTransform.css";
 
@@ -36,7 +36,7 @@ export const MatrixTransform = ({
     }
 
     setMatrixLatex(latex);
-  }, [matrix]);
+  }, [matrix, transpose]);
 
   return (
     <div

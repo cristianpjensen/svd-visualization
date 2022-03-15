@@ -1,48 +1,42 @@
-import * as THREE from "three";
-import TWEEN from "@tweenjs/tween.js";
+import { useEffect, useRef } from "react";
+import { MeshProps } from "@react-three/fiber";
+import { Mesh, Vector3, Matrix3, Matrix4, Euler } from "three";
+import * as TWEEN from "@tweenjs/tween.js";
 import _ from "lodash";
 
-/**
- * Creates a dot to represent a vector in `scene`. It also assigns a colour,
- * based on initial position, which makes it easier to differentiate between
- * vectors after transformations.
- * @param vector coordinates.
- * @param scene scene to add vector to.
- * @returns sphere object.
- */
-export const vectorCreate = (
-  vector: THREE.Vector3,
-  scene: THREE.Scene
-): THREE.Mesh => {
-  const rgb = posToRGB(vector);
+interface CircleProps extends MeshProps {
+  vector: Vector3;
+  appliedMatrix: Matrix3;
+}
 
-  const material = new THREE.MeshPhongMaterial({
-    color: rgb,
-    specular: rgb,
-    shininess: 10,
-  });
+export const Circle = ({
+  vector,
+  appliedMatrix: matrix,
+  ...props
+}: CircleProps) => {
+  const mesh = useRef<Mesh>();
 
-  const geometry = new THREE.SphereGeometry(0.2, 32, 32);
-  const sphere = new THREE.Mesh(geometry, material);
-  sphere.position.set(vector.x, vector.y, vector.z);
-  scene.add(sphere);
+  useEffect(() => {
+    if (mesh.current) {
+      // Check if it is a scale matrix (by checking whether is S).
+      const m = matrix.elements;
+      const isScaleMatrix =
+        m[1] + m[2] + m[3] + m[5] + m[6] + m[7] === 0 &&
+        m[0] + m[4] + m[8] !== 0;
+      if (isScaleMatrix) {
+        scale(vector, mesh.current);
+      } else {
+        rotate(matrix, mesh.current);
+      }
+    }
+  }, [mesh, vector, matrix]);
 
-  return sphere;
-};
-
-/**
- * Computes the RGB colour code to assign to a vector. It basically just
- * assigns the x-, y-, and z-component to the red, green, and blue channel,
- * respectively.
- * @param vector three dimensional vector.
- * @returns rgb colour code.
- */
-const posToRGB = (vector: THREE.Vector3): string => {
-  const x = Math.floor(((vector.x + 8) / 17) * 255);
-  const y = Math.floor(((vector.y + 8) / 17) * 255);
-  const z = Math.floor(((vector.z + 8) / 17) * 255);
-
-  return `rgb(${x}, ${y}, ${z})`;
+  return (
+    <mesh position={vector} {...props} ref={mesh}>
+      <sphereGeometry args={[0.2, 32, 32]} />
+      <meshMatcapMaterial color="lightgreen" />
+    </mesh>
+  );
 };
 
 /**
@@ -57,17 +51,14 @@ const posToRGB = (vector: THREE.Vector3): string => {
  * @param matrix rotation matrix.
  * @param objVector vector object to move.
  */
-export const vectorRotate = (
-  matrix: THREE.Matrix3,
-  objVector: THREE.Mesh
-): void => {
+const rotate = (matrix: Matrix3, objVector: Mesh): void => {
   // get angle and rotation axis from matrix
   const [m00, m10, m20, m01, m11, m21, m02, m12, m22] = matrix.elements;
 
-  const m = new THREE.Matrix4();
+  const m = new Matrix4();
   m.set(m00, m01, m02, 1, m10, m11, m12, 1, m20, m21, m22, 1, 0, 0, 0, 1);
 
-  var eu = new THREE.Euler();
+  var eu = new Euler();
   eu.setFromRotationMatrix(m, "ZYX");
 
   const initPos = _.cloneDeep(objVector.position);
@@ -82,7 +73,7 @@ export const vectorRotate = (
     .to(e, 1000)
     .easing(TWEEN.Easing.Quadratic.Out)
     .onUpdate(() => {
-      const eulerMatrix = new THREE.Matrix3();
+      const eulerMatrix = new Matrix3();
 
       // https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Conversion_formulae_between_formalisms
       const { x, y, z } = euler;
@@ -113,17 +104,14 @@ export const vectorRotate = (
  * @param vector vector to go to.
  * @param objVector vector to move.
  */
-export const vectorScale = (
-  vector: THREE.Vector3,
-  objVector: THREE.Mesh
-): void => {
-  var pos = objVector.position;
+export const scale = (vector: Vector3, mesh: Mesh): void => {
+  var pos = mesh.position;
 
   const tween = new TWEEN.Tween(pos)
     .to(vector)
     .easing(TWEEN.Easing.Quadratic.Out)
     .onUpdate(() => {
-      objVector.position.set(pos.x, pos.y, pos.z);
+      mesh.position.set(pos.x, pos.y, pos.z);
     });
 
   tween.start();
