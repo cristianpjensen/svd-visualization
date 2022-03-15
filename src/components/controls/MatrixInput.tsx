@@ -1,5 +1,4 @@
-import { useCallback, useState } from "react";
-import _ from "lodash";
+import React, { useCallback, useState } from "react";
 import { useStore } from "../../store";
 
 export const MatrixInput = () => {
@@ -13,9 +12,15 @@ export const MatrixInput = () => {
         zIndex: 1,
       }}
     >
-      {_.range(9).map((i) => (
-        <InputCell key={i} index={i} />
-      ))}
+      <InputCell index={0} />
+      <InputCell index={1} />
+      <InputCell index={2} />
+      <InputCell index={3} />
+      <InputCell index={4} />
+      <InputCell index={5} />
+      <InputCell index={6} />
+      <InputCell index={7} />
+      <InputCell index={8} />
     </div>
   );
 };
@@ -29,16 +34,26 @@ const InputCell = ({ index }: InputCellProps) => {
     state.matrix,
     state.setMatrixIndex,
   ]);
-  const [value, setValue] = useState<number>(matrix.elements[index]);
+  const [value, setValue] = useState<string>(
+    matrix.elements[index].toString().replace("-", "–")
+  );
 
-  const handleChange = useCallback((e: any) => {
-    setValue(e.target.value);
+  const handleChange = useCallback(
+    (e: React.FormEvent<HTMLInputElement>) => {
+      const current = e.currentTarget.value;
 
-    setMatrixIndex(index, parseFloat(e.target.value));
-  }, [index, setMatrixIndex]);
+      if (!isNaN(parseFloat(current)) && current !== "") {
+        setMatrixIndex(index, parseFloat(current));
+      }
+
+      setValue(current.replace("-", "−"));
+    },
+    [index, setMatrixIndex]
+  );
 
   return (
     <input
+      type="number"
       style={{
         width: "4ch",
         textAlign: "center",

@@ -54,18 +54,37 @@ interface Store {
 const INIT_VECTORS = squareTemplate(10, 10, 10, 5);
 
 export const useStore = create<Store>((set, get) => ({
-  matrix: new Matrix3().set(1, 2, 3, 4, 5, 6, 7, 8, 9),
+  matrix: new Matrix3().set(0, 1, 1, 1.41, 2, 0, 0, 1, 1),
   setMatrixIndex: (index, value) => {
-    const matrix = get().matrix;
-    const newMatrix = new Matrix3().copy(matrix);
-    newMatrix.elements[index] = value;
+    const m = get().matrix.elements;
+
+    const newMatrix = new Matrix3();
+    if (index === 0) {
+      newMatrix.set(value, m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]);
+    } else if (index === 1) {
+      newMatrix.set(m[0], value, m[2], m[3], m[4], m[5], m[6], m[7], m[8]);
+    } else if (index === 2) {
+      newMatrix.set(m[0], m[1], value, m[3], m[4], m[5], m[6], m[7], m[8]);
+    } else if (index === 3) {
+      newMatrix.set(m[0], m[1], m[2], value, m[4], m[5], m[6], m[7], m[8]);
+    } else if (index === 4) {
+      newMatrix.set(m[0], m[1], m[2], m[3], value, m[5], m[6], m[7], m[8]);
+    } else if (index === 5) {
+      newMatrix.set(m[0], m[1], m[2], m[3], m[4], value, m[6], m[7], m[8]);
+    } else if (index === 6) {
+      newMatrix.set(m[0], m[1], m[2], m[3], m[4], m[5], value, m[7], m[8]);
+    } else if (index === 7) {
+      newMatrix.set(m[0], m[1], m[2], m[3], m[4], m[5], m[6], value, m[8]);
+    } else if (index === 8) {
+      newMatrix.set(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], value);
+    }
 
     set({ matrix: newMatrix });
   },
-  resetMatrix: () => set({ vectors: INIT_VECTORS }),
+  resetMatrix: () =>
+    set({ vectors: INIT_VECTORS, lastMatrix: new Matrix3().identity() }),
   applyMatrix: (matrix) => {
     const vectors = get().vectors;
-    console.log(matrix.elements);
 
     const updatedVectors = _.cloneDeep(vectors).map((vec) =>
       vec.applyMatrix3(matrix)
