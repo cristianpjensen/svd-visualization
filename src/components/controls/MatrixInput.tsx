@@ -34,9 +34,7 @@ const InputCell = ({ index }: InputCellProps) => {
     state.matrix,
     state.setMatrixIndex,
   ]);
-  const [value, setValue] = useState<string>(
-    matrix.elements[index].toString().replace("-", "–")
-  );
+  const [value, setValue] = useState<string>(matrix.elements[index].toString());
 
   const handleChange = useCallback(
     (e: React.FormEvent<HTMLInputElement>) => {
@@ -46,7 +44,7 @@ const InputCell = ({ index }: InputCellProps) => {
         setMatrixIndex(index, parseFloat(current));
       }
 
-      setValue(current.replace("-", "−"));
+      setValue(current);
     },
     [index, setMatrixIndex]
   );
