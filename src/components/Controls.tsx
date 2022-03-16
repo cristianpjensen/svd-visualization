@@ -14,14 +14,9 @@ export const Controls = () => {
     [m[3], m[4], m[5]],
     [m[6], m[7], m[8]],
   ]);
-  // The package gives the negative of all values, so invert them
-  const U = new Matrix3().fromArray(
-    svd.leftSingularVectors.to1DArray().map((x) => -x)
-  );
+  const U = new Matrix3().fromArray(svd.leftSingularVectors.to1DArray());
   const S = new Matrix3().fromArray(svd.diagonalMatrix.to1DArray());
-  const V = new Matrix3().fromArray(
-    svd.rightSingularVectors.to1DArray().map((x) => -x)
-  );
+  const V = new Matrix3().fromArray(svd.rightSingularVectors.to1DArray());
 
   return (
     <div
