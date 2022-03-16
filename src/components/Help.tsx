@@ -19,6 +19,7 @@ export const Help = () => {
       <a
         href="https://github.com/cristianpjensen/svd-visualisation"
         target="_blank"
+        rel="noreferrer"
         style={{ position: "absolute", top: 16, left: 16 }}
       >
         <GithubIcon />

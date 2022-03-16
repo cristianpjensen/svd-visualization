@@ -21,6 +21,7 @@ export const Circle = ({
   useEffect(() => {
     const rgb = posToRGB(vector);
     setColor(rgb);
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
