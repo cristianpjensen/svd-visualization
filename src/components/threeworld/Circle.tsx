@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { MeshProps } from "@react-three/fiber";
-import { Mesh, Vector3, Matrix3, Matrix4, Euler } from "three";
+import { Mesh, Vector3, Matrix3 } from "three";
 import * as TWEEN from "@tweenjs/tween.js";
-import _ from "lodash";
+import { EigenvalueDecomposition } from "ml-matrix";
 
 interface CircleProps extends MeshProps {
   vector: Vector3;
@@ -21,97 +21,99 @@ export const Circle = ({
   useEffect(() => {
     const rgb = posToRGB(vector);
     setColor(rgb);
+
     // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
+    if (isCloseTo(matrix.determinant(), -1)) {
+      const negativeDiagonalMatrix = new Matrix3().fromArray([
+        -1, 0, 0, 0, -1, 0, 0, 0, -1,
+      ]);
+      matrix.multiply(negativeDiagonalMatrix);
+    }
+
     if (mesh.current) {
-      // Check if it is a scale matrix (by checking whether is S).
-      const m = matrix.elements;
-      const isScaleMatrix =
-        m[1] + m[2] + m[3] + m[5] + m[6] + m[7] === 0 &&
-        m[0] + m[4] + m[8] !== 0;
-      if (isScaleMatrix) {
-        scale(vector, mesh.current);
-      } else {
-        rotate(matrix, mesh.current);
-      }
+      const currentMatrix = matrix.clone();
+      move(currentMatrix, vector, mesh.current);
     }
   }, [mesh, vector, matrix]);
 
   return (
-    <mesh position={vector} {...props} ref={mesh}>
+    <mesh {...props} ref={mesh}>
       <sphereGeometry args={[0.3, 32, 32]} />
       <meshMatcapMaterial color={color} />
     </mesh>
   );
 };
 
-/**
- * Rotates the vector with the rotation matrix. Make sure that the length stays
- * the same after the transformation, because this function only works with
- * rotation matrices. If there is any chance of the matrix not being a rotation
- * matrix, make use of the `vectorScale()` function.
- *
- * This calculates the euler angle from the rotation matrix, after which it
- * tweens between 0 and the euler angle. Then, every iteration of the tween, it
- * computes the matrix for the current euler angle and applies it to the vector.
- * @param matrix rotation matrix.
- * @param objVector vector object to move.
- */
-const rotate = (matrix: Matrix3, objVector: Mesh): void => {
-  // get angle and rotation axis from matrix
-  const [m00, m10, m20, m01, m11, m21, m02, m12, m22] = matrix.elements;
+const move = (matrix: Matrix3, vector: Vector3, mesh: Mesh) => {
+  // The matrix is a rotation matrix if its determinant is 1.
+  if (isCloseTo(matrix.determinant(), 1)) {
+    rotate(matrix, mesh);
+  } else {
+    scale(vector, mesh);
+  }
+};
 
-  const m = new Matrix4();
-  m.set(m00, m01, m02, 1, m10, m11, m12, 1, m20, m21, m22, 1, 0, 0, 0, 1);
+const rotate = (matrix: Matrix3, mesh: Mesh): void => {
+  const m = matrix.elements;
+  const ev = new EigenvalueDecomposition([
+    [m[0], m[3], m[6]],
+    [m[1], m[4], m[7]],
+    [m[2], m[5], m[8]],
+  ]);
 
-  var eu = new Euler();
-  eu.setFromRotationMatrix(m, "ZYX");
+  // The rotation axis is the eigenvector with the corresponding eigenvalue 1.
+  const eigenvectorIndex = ev.realEigenvalues.findIndex((e) => isCloseTo(e, 1));
+  const k = new Vector3().fromArray(
+    ev.eigenvectorMatrix.getColumn(eigenvectorIndex)
+  );
 
-  const initPos = _.cloneDeep(objVector.position);
-  var euler = {
-    x: 0,
-    y: 0,
-    z: 0,
-  };
-  const e = { x: eu.x, y: eu.y, z: eu.z };
+  // Rotation angle is calculated by the trace.
+  const trace = m[0] + m[4] + m[8];
+  const theta = { value: Math.acos((trace - 1) / 2) };
 
-  const tween = new TWEEN.Tween(euler)
-    .to(e, 1000)
+  // Store the vector from where we being, because we will apply the rotation on
+  // it for each angle in the tween and assign that position to the vector.
+  const vector = mesh.position.clone();
+
+  const angle = { value: 0 };
+  const tween = new TWEEN.Tween(angle)
+    .to(theta, 1000)
     .easing(TWEEN.Easing.Quadratic.Out)
     .onUpdate(() => {
-      const eulerMatrix = new Matrix3();
+      const T = angle.value;
+      const N = [-k.x, -k.y, -k.z];
 
-      // https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Conversion_formulae_between_formalisms
-      const { x, y, z } = euler;
-      eulerMatrix.set(
-        Math.cos(y) * Math.cos(z),
-        -Math.cos(x) * Math.sin(z) + Math.sin(x) * Math.sin(y) * Math.cos(z),
-        Math.sin(x) * Math.sin(z) + Math.cos(x) * Math.sin(y) * Math.cos(z),
-        Math.cos(y) * Math.sin(z),
-        Math.cos(x) * Math.cos(z) + Math.sin(x) * Math.sin(y) * Math.sin(z),
-        -Math.sin(x) * Math.cos(z) + Math.cos(x) * Math.sin(y) * Math.sin(z),
-        -Math.sin(y),
-        Math.sin(x) * Math.cos(y),
-        Math.cos(x) * Math.cos(y)
+      // Compute rotation matrix for the current angle.
+      // Source: http://scipp.ucsc.edu/~haber/ph216/rotation_12.pdf (page 5).
+      const R = new Matrix3().set(
+        N[0] * N[0] * (1 - Math.cos(T)) + Math.cos(T),
+        N[0] * N[1] * (1 - Math.cos(T)) - N[2] * Math.sin(T),
+        N[0] * N[2] * (1 - Math.cos(T)) + N[1] * Math.sin(T),
+        N[1] * N[0] * (1 - Math.cos(T)) + N[2] * Math.sin(T),
+        N[1] * N[1] * (1 - Math.cos(T)) + Math.cos(T),
+        N[1] * N[2] * (1 - Math.cos(T)) - N[0] * Math.sin(T),
+        N[2] * N[0] * (1 - Math.cos(T)) - N[1] * Math.sin(T),
+        N[2] * N[1] * (1 - Math.cos(T)) + N[0] * Math.sin(T),
+        N[2] * N[2] * (1 - Math.cos(T)) + Math.cos(T)
       );
 
-      const init = _.cloneDeep(initPos);
-      const pos = init.applyMatrix3(eulerMatrix);
-      objVector.position.set(pos.x, pos.y, pos.z);
+      // Apply the rotation matrix to the beginning vector and assign it to the
+      // actual vector.
+      const rotatedVector = vector.clone().applyMatrix3(R);
+      mesh.position.copy(rotatedVector);
+    })
+    .onComplete(() => {
+      // After the rotation is complete, set the vector to its actual position.
+      // This makes it easier to find bugs.
+      mesh.position.copy(vector.applyMatrix3(matrix));
     });
 
   tween.start();
 };
 
-/**
- * Moves `objVector` to the position of `vector` by scaling. It basically just
- * goes from the (x, y, z)-position of the object to the (x, y, z)-position of
- * the vector.
- * @param vector vector to go to.
- * @param objVector vector to move.
- */
 export const scale = (vector: Vector3, mesh: Mesh): void => {
   var pos = mesh.position;
 
@@ -125,13 +127,9 @@ export const scale = (vector: Vector3, mesh: Mesh): void => {
   tween.start();
 };
 
-/**
- * Computes the RGB colour code to assign to a vector. It basically just
- * assigns the x-, y-, and z-component to the red, green, and blue channel,
- * respectively.
- * @param vector three dimensional vector.
- * @returns rgb colour code.
- */
+// Since the vector is in three-dimensional space and RGB is a three-dimensional
+// space, we can use it to assign a unique colour to each vector, so that we can
+// keep track of the individual vectors.
 const posToRGB = (vector: Vector3): string => {
   const x = Math.floor(((vector.x + 12) / 17) * 255);
   const y = Math.floor(((vector.y + 12) / 17) * 255);
@@ -139,3 +137,7 @@ const posToRGB = (vector: Vector3): string => {
 
   return `rgb(${x}, ${y}, ${z})`;
 };
+
+// Helper function because all the computations are not accurate, because they
+// use floating-point numbers.
+const isCloseTo = (a: number, b: number) => Math.abs(a - b) < 0.001;

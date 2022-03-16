@@ -54,7 +54,7 @@ interface Store {
 const INIT_VECTORS = squareTemplate(10, 10, 10, 5);
 
 export const useStore = create<Store>((set, get) => ({
-  matrix: new Matrix3().set(0, 1, 1, 1.41, 2, 0, 0, 1, 1),
+  matrix: new Matrix3().set(4, 1, 0, 1, 2, 0, 0, 0, 1),
   setMatrixIndex: (index, value) => {
     const m = get().matrix.elements;
 
@@ -82,7 +82,10 @@ export const useStore = create<Store>((set, get) => ({
     set({ matrix: newMatrix });
   },
   resetMatrix: () =>
-    set({ vectors: INIT_VECTORS, lastMatrix: new Matrix3().identity() }),
+    set({
+      vectors: INIT_VECTORS,
+      lastMatrix: new Matrix3().fromArray([0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    }),
   applyMatrix: (matrix) => {
     const vectors = get().vectors;
 
@@ -92,6 +95,6 @@ export const useStore = create<Store>((set, get) => ({
 
     set({ vectors: updatedVectors, lastMatrix: matrix });
   },
-  lastMatrix: new Matrix3().identity(),
+  lastMatrix: new Matrix3().fromArray([0, 0, 0, 0, 0, 0, 0, 0, 0]),
   vectors: INIT_VECTORS,
 }));
