@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MeshProps } from "@react-three/fiber";
 import { Mesh, Vector3, Matrix3, Matrix4, Euler } from "three";
 import * as TWEEN from "@tweenjs/tween.js";
@@ -15,6 +15,13 @@ export const Circle = ({
   ...props
 }: CircleProps) => {
   const mesh = useRef<Mesh>();
+
+  const [color, setColor] = useState<string>("");
+
+  useEffect(() => {
+    const rgb = posToRGB(vector);
+    setColor(rgb);
+  }, []);
 
   useEffect(() => {
     if (mesh.current) {
@@ -34,7 +41,7 @@ export const Circle = ({
   return (
     <mesh position={vector} {...props} ref={mesh}>
       <sphereGeometry args={[0.3, 32, 32]} />
-      <meshMatcapMaterial color="lightgreen" />
+      <meshMatcapMaterial color={color} />
     </mesh>
   );
 };
@@ -115,4 +122,19 @@ export const scale = (vector: Vector3, mesh: Mesh): void => {
     });
 
   tween.start();
+};
+
+/**
+ * Computes the RGB colour code to assign to a vector. It basically just
+ * assigns the x-, y-, and z-component to the red, green, and blue channel,
+ * respectively.
+ * @param vector three dimensional vector.
+ * @returns rgb colour code.
+ */
+const posToRGB = (vector: Vector3): string => {
+  const x = Math.floor(((vector.x + 12) / 17) * 255);
+  const y = Math.floor(((vector.y + 12) / 17) * 255);
+  const z = Math.floor(((vector.z + 12) / 17) * 255);
+
+  return `rgb(${x}, ${y}, ${z})`;
 };

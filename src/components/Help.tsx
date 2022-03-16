@@ -74,7 +74,7 @@ export const Help = () => {
                   components of the SVD will adjust dynamically to your input.
                   When you have put in your desired matrix, you can click on the
                   matrices one-by-one to apply them to the cube of vectors
-                  (visualised as green spheres).
+                  (visualised as colourful spheres).
                 </p>
                 <p>
                   Click on the refresh arrow to reset the vectors to their

@@ -18,7 +18,7 @@ export const ThreeWorld = () => {
       }}
     >
       <ambientLight />
-      <gridHelper args={[100, 100, "white", "gray"]} />
+      <gridHelper args={[100, 100, "white", "rgb(40, 40, 40)"]} />
       <Vectors />
       <RenderCycler />
       <OrbitControls />
