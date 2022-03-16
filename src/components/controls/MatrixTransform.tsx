@@ -3,8 +3,6 @@ import Latex from "react-latex-next";
 import { Matrix3 } from "three";
 import { useStore } from "../../store";
 
-import "./MatrixTransform.css";
-
 interface MatrixTransformProps {
   matrix: Matrix3;
   transpose?: boolean;
@@ -39,9 +37,13 @@ export const MatrixTransform = ({
   }, [matrix, transpose]);
 
   return (
-    <div
-      className="matrix"
-      style={{ marginTop: transpose ? -4 : 0 }}
+    <button
+      style={{
+        marginTop: transpose ? -4 : 0,
+        fontSize: 14,
+        display: "flex",
+        alignItems: "center",
+      }}
       onClick={() => {
         if (transpose) {
           applyMatrix(matrix.transpose());
@@ -51,6 +53,6 @@ export const MatrixTransform = ({
       }}
     >
       <Latex>{matrixLatex}</Latex>
-    </div>
+    </button>
   );
 };

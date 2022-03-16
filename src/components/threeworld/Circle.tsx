@@ -33,7 +33,7 @@ export const Circle = ({
 
   return (
     <mesh position={vector} {...props} ref={mesh}>
-      <sphereGeometry args={[0.2, 32, 32]} />
+      <sphereGeometry args={[0.3, 32, 32]} />
       <meshMatcapMaterial color="lightgreen" />
     </mesh>
   );
