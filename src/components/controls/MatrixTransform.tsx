@@ -46,7 +46,9 @@ export const MatrixTransform = ({
       }}
       onClick={() => {
         if (transpose) {
-          applyMatrix(matrix.transpose());
+          const newMatrix = matrix.clone();
+          newMatrix.transpose();
+          applyMatrix(newMatrix);
         } else {
           applyMatrix(matrix);
         }
