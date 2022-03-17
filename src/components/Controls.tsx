@@ -18,6 +18,17 @@ export const Controls = () => {
   const S = new Matrix3().fromArray(svd.diagonalMatrix.to1DArray());
   const V = new Matrix3().fromArray(svd.rightSingularVectors.to1DArray());
 
+  // If U and V are both reflection matrices (determinants equal to -1), they
+  // will result in a rotation matrix. So, we turn them both into rotation
+  // matrices because the animation for rotations is nicer than for reflections.
+  if (isCloseTo(U.determinant(), -1) && isCloseTo(V.determinant(), -1)) {
+    const negativeDiagonalMatrix = new Matrix3().fromArray([
+      -1, 0, 0, 0, -1, 0, 0, 0, -1,
+    ]);
+    U.multiply(negativeDiagonalMatrix);
+    V.multiply(negativeDiagonalMatrix);
+  }
+
   return (
     <div
       style={{
@@ -63,3 +74,6 @@ export const Controls = () => {
     </div>
   );
 };
+
+// Helper function for inaccurate computations like floating-point arithmetic.
+const isCloseTo = (a: number, b: number) => Math.abs(a - b) < 0.001;

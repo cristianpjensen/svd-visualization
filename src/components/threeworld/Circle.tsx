@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { MeshProps } from "@react-three/fiber";
 import { Mesh, Vector3, Matrix3 } from "three";
 import * as TWEEN from "@tweenjs/tween.js";
-import { EigenvalueDecomposition } from "ml-matrix";
 
 interface CircleProps extends MeshProps {
   vector: Vector3;
@@ -26,13 +25,6 @@ export const Circle = ({
   }, []);
 
   useEffect(() => {
-    if (isCloseTo(matrix.determinant(), -1)) {
-      const negativeDiagonalMatrix = new Matrix3().fromArray([
-        -1, 0, 0, 0, -1, 0, 0, 0, -1,
-      ]);
-      matrix.multiply(negativeDiagonalMatrix);
-    }
-
     if (mesh.current) {
       const currentMatrix = matrix.clone();
       move(currentMatrix, vector, mesh.current);
@@ -48,33 +40,46 @@ export const Circle = ({
 };
 
 const move = (matrix: Matrix3, vector: Vector3, mesh: Mesh) => {
-  // The matrix is a rotation matrix if its determinant is 1.
-  if (isCloseTo(matrix.determinant(), 1)) {
-    rotate(matrix, mesh);
+  const inverse = matrix.clone().invert();
+  const transpose = matrix.clone().transpose();
+
+  // The matrix is a rotation matrix if its determinant is 1 and the inverse is
+  // equal to the transpose.
+  if (
+    isCloseTo(matrix.determinant(), 1) &&
+    isMatrixCloseTo(inverse, transpose)
+  ) {
+    rotate(matrix, vector, mesh);
   } else {
     scale(vector, mesh);
   }
 };
 
-const rotate = (matrix: Matrix3, mesh: Mesh): void => {
-  const m = matrix.elements;
-  const ev = new EigenvalueDecomposition([
-    [m[0], m[3], m[6]],
-    [m[1], m[4], m[7]],
-    [m[2], m[5], m[8]],
-  ]);
-
-  // The rotation axis is the eigenvector with the corresponding eigenvalue 1.
-  const eigenvectorIndex = ev.realEigenvalues.findIndex((e) => isCloseTo(e, 1));
-  const k = new Vector3().fromArray(
-    ev.eigenvectorMatrix.getColumn(eigenvectorIndex)
-  );
-
+const rotate = (
+  matrix: Matrix3,
+  resultingVector: Vector3,
+  mesh: Mesh
+): void => {
   // Rotation angle is calculated by the trace.
+  const m = matrix.elements;
   const trace = m[0] + m[4] + m[8];
   const theta = { value: Math.acos((trace - 1) / 2) };
 
-  // Store the vector from where we being, because we will apply the rotation on
+  // If the trace is 3, then the matrix is the identity matrix, so no
+  // transformation is needed.
+  if (isCloseTo(trace, 3)) {
+    return;
+  }
+
+  // Compute the rotation axis.
+  // http://scipp.ucsc.edu/~haber/ph216/rotation_12.pdf (pages 6, 7)
+  const n = new Vector3();
+  n.set(m[7] - m[5], m[2] - m[6], m[3] - m[1]);
+  n.multiplyScalar(1 / Math.sqrt((3 - trace) * (1 + trace)));
+  // The rotation is the inverse of this vector.
+  n.multiplyScalar(-1);
+
+  // Store the vector from where we begin, because we will apply the rotation on
   // it for each angle in the tween and assign that position to the vector.
   const vector = mesh.position.clone();
 
@@ -84,20 +89,19 @@ const rotate = (matrix: Matrix3, mesh: Mesh): void => {
     .easing(TWEEN.Easing.Quadratic.Out)
     .onUpdate(() => {
       const T = angle.value;
-      const N = [-k.x, -k.y, -k.z];
 
       // Compute rotation matrix for the current angle.
       // Source: http://scipp.ucsc.edu/~haber/ph216/rotation_12.pdf (page 5).
       const R = new Matrix3().set(
-        N[0] * N[0] * (1 - Math.cos(T)) + Math.cos(T),
-        N[0] * N[1] * (1 - Math.cos(T)) - N[2] * Math.sin(T),
-        N[0] * N[2] * (1 - Math.cos(T)) + N[1] * Math.sin(T),
-        N[1] * N[0] * (1 - Math.cos(T)) + N[2] * Math.sin(T),
-        N[1] * N[1] * (1 - Math.cos(T)) + Math.cos(T),
-        N[1] * N[2] * (1 - Math.cos(T)) - N[0] * Math.sin(T),
-        N[2] * N[0] * (1 - Math.cos(T)) - N[1] * Math.sin(T),
-        N[2] * N[1] * (1 - Math.cos(T)) + N[0] * Math.sin(T),
-        N[2] * N[2] * (1 - Math.cos(T)) + Math.cos(T)
+        n.x * n.x * (1 - Math.cos(T)) + Math.cos(T),
+        n.x * n.y * (1 - Math.cos(T)) - n.z * Math.sin(T),
+        n.x * n.z * (1 - Math.cos(T)) + n.y * Math.sin(T),
+        n.y * n.x * (1 - Math.cos(T)) + n.z * Math.sin(T),
+        n.y * n.y * (1 - Math.cos(T)) + Math.cos(T),
+        n.y * n.z * (1 - Math.cos(T)) - n.x * Math.sin(T),
+        n.z * n.x * (1 - Math.cos(T)) - n.y * Math.sin(T),
+        n.z * n.y * (1 - Math.cos(T)) + n.x * Math.sin(T),
+        n.z * n.z * (1 - Math.cos(T)) + Math.cos(T)
       );
 
       // Apply the rotation matrix to the beginning vector and assign it to the
@@ -108,7 +112,7 @@ const rotate = (matrix: Matrix3, mesh: Mesh): void => {
     .onComplete(() => {
       // After the rotation is complete, set the vector to its actual position.
       // This makes it easier to find bugs.
-      mesh.position.copy(vector.applyMatrix3(matrix));
+      mesh.position.copy(resultingVector);
     });
 
   tween.start();
@@ -138,6 +142,20 @@ const posToRGB = (vector: Vector3): string => {
   return `rgb(${x}, ${y}, ${z})`;
 };
 
-// Helper function because all the computations are not accurate, because they
-// use floating-point numbers.
+// Helper function for inaccurate computations like floating-point arithmetic.
 const isCloseTo = (a: number, b: number) => Math.abs(a - b) < 0.001;
+
+// Helper function for inaccurate computations like floating-point arithmetic,
+// constrained to 3x3 matrices.
+const isMatrixCloseTo = (m1: Matrix3, m2: Matrix3) => {
+  const m1Elements = m1.elements;
+  const m2Elements = m2.elements;
+
+  for (let i = 0; i < 9; i++) {
+    if (!isCloseTo(m1Elements[i], m2Elements[i])) {
+      return false;
+    }
+  }
+
+  return true;
+};

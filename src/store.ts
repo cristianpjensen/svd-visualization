@@ -1,6 +1,5 @@
 import create from "zustand";
 import { Matrix3, Vector3 } from "three";
-import _ from "lodash";
 
 /**
  * Returns a square of three dimensional vector coordinates.
@@ -89,9 +88,11 @@ export const useStore = create<Store>((set, get) => ({
   applyMatrix: (matrix) => {
     const vectors = get().vectors;
 
-    const updatedVectors = _.cloneDeep(vectors).map((vec) =>
-      vec.applyMatrix3(matrix)
-    );
+    const updatedVectors = vectors.map((vector) => {
+      const newVector = new Vector3().copy(vector);
+      newVector.applyMatrix3(matrix);
+      return newVector;
+    });
 
     set({ vectors: updatedVectors, lastMatrix: matrix });
   },
